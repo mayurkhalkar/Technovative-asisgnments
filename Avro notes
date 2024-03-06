@@ -6,3 +6,65 @@
     {"name": "myDict", "type": {"type": "map", "values": "string"}}
   ]
 }
+--------------
+
+import pandas as pd
+from avro import schema, datafile, io
+import json
+
+# Example nested JSON data
+nested_json_data = [
+    {
+        "name": "John Doe",
+        "age": 30,
+        "city": "New York",
+        "email": "john.doe@example.com",
+        "isStudent": False,
+        "hobbies": {
+            "firstHobi": "cricket",
+            "secondhobi": "kabaddi"
+        }
+    },
+    {
+        "name": "mayur",
+        "age": 30,
+        "city": " York",
+        "email": "@example.com",
+        "isStudent": True,
+        "hobbies": {
+            "firstHobi": "cricket",
+            "secondhobi": "kabaddi"
+        }
+    }
+]
+
+# Convert nested JSON data to DataFrame
+df = pd.json_normalize(nested_json_data)
+
+# Define Avro schema automatically based on DataFrame columns and data types
+avro_schema = {
+    "type": "record",
+    "name": "User",
+    "fields": [
+        {"name": col, "type": ["null", dtype.name]} for col, dtype in zip(df.columns, df.dtypes)
+    ]
+}
+
+# Convert Avro schema to JSON format
+avro_schema_json = json.dumps(avro_schema)
+
+# Serialize the Avro schema
+parsed_schema = schema.Parse(avro_schema_json)
+
+# Create an Avro data file writer
+with open("user_data.avro", "wb") as avro_file:
+    writer = datafile.DataFileWriter(avro_file, io.DatumWriter(), parsed_schema)
+
+    # Write each row of data to the Avro file
+    for index, row in df.iterrows():
+        writer.append(row.to_dict())
+
+    # Close the Avro file writer
+    writer.close()
+
+print("Avro file 'user_data.avro' created successfully.")
