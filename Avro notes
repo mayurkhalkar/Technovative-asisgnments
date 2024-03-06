@@ -1,0 +1,8 @@
+{
+  "type": "record",
+  "name": "MyData",
+  "fields": [
+    {"name": "myList", "type": {"type": "array", "items": "int"}},
+    {"name": "myDict", "type": {"type": "map", "values": "string"}}
+  ]
+}
