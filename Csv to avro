@@ -1,0 +1,28 @@
+import pandas as pd
+import fastavro.schema
+from fastavro import writer
+
+# Assuming you have a DataFrame named df
+# Convert DataFrame to CSV
+df.to_csv('data.csv', index=False)
+
+# Read CSV to infer column names and types for Avro schema
+csv_data = pd.read_csv('data.csv')
+
+# Define Avro schema based on column names and types
+avro_schema = {
+    "type": "record",
+    "name": "MyData",
+    "fields": [
+        {"name": col, "type": ["null", "string"]}  # You can adjust type based on your data
+        for col in csv_data.columns
+    ]
+}
+
+# Write Avro schema to a file
+with open('schema.avsc', 'w') as f:
+    fastavro.schema.writer(f, avro_schema)
+
+# Convert CSV to Avro using the created schema
+with open('data.avro', 'wb') as out:
+    writer(out, avro_schema, pd.read_csv('data.csv').to_dict(orient='records'))
