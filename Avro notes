@@ -68,3 +68,35 @@ with open("user_data.avro", "wb") as avro_file:
     writer.close()
 
 print("Avro file 'user_data.avro' created successfully.")
+------------+--
+import json
+import fastavro
+from fastavro.schema import load_schema
+
+def generate_avro_schema(json_data):
+    fields = []
+    for key, value in json_data.items():
+        if isinstance(value, dict):
+            nested_fields = [{"name": k, "type": "string" if isinstance(v, str) else "int"} for k, v in value.items()]
+            fields.append({"name": key, "type": {"type": "record", "name": key.capitalize(), "fields": nested_fields}})
+        else:
+            fields.append({"name": key, "type": "string" if isinstance(value, str) else "int"})
+    return {"type": "record", "name": "DynamicRecord", "fields": fields}
+
+# Example JSON data (replace with your API response)
+json_data = {
+    "field1": "value1",
+    "field2": 123,
+    "nested_field": {
+        "nested_field1": "nested_value1",
+        "nested_field2": 456
+    }
+}
+
+# Generate Avro Schema
+avro_schema = generate_avro_schema(json_data)
+
+# Write Avro File
+with open('example.avro', 'wb') as out:
+    fastavro.schemaless_writer(out, avro_schema, [json_data])
+
