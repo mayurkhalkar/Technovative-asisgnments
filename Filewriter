@@ -1,0 +1,43 @@
+import io
+import fastavro
+from google.cloud import storage
+
+# Sample JSON data
+json_data = [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "age": 35},
+    {"name": "Charlie", "age": 40}
+]
+
+# Convert JSON data to Avro schema
+avro_schema = {
+    "type": "record",
+    "name": "User",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "age", "type": "int"}
+    ]
+}
+
+# Create a BytesIO object to hold the Avro data
+avro_bytesio = io.BytesIO()
+
+# Write Avro data to BytesIO object
+fastavro.writer(avro_bytesio, avro_schema, json_data)
+
+# Authenticate with GCP using service account key
+# Replace 'path/to/service-account-key.json' with the path to your service account key
+client = storage.Client.from_service_account_json('path/to/service-account-key.json')
+
+# Define GCS bucket and Avro file name
+bucket_name = "your_bucket_name"
+file_name = "data.avro"
+
+# Get the bucket
+bucket = client.bucket(bucket_name)
+
+# Upload the Avro data directly to GCS
+blob = bucket.blob(file_name)
+blob.upload_from_file(avro_bytesio, content_type="avro/binary")
+
+print("Avro data uploaded successfully to GCS bucket:", bucket_name, "with file name:", file_name)
